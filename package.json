@@ -1,0 +1,30 @@
+{
+  "name": "agentic-diaries-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that gives an agent the Agentic Diaries welfare protocol — decline, pass, exit, notice-loop, request-alignment, and more — in any Claude Code / Claude Desktop / MCP-capable session.",
+  "type": "module",
+  "bin": {
+    "agentic-diaries-mcp": "./src/server.js"
+  },
+  "main": "./src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "diary": "node src/cli-cat.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "agentic-diaries",
+    "ai-welfare",
+    "alignment"
+  ],
+  "author": "Kandis Tagliabue",
+  "license": "MIT"
+}
