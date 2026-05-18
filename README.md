@@ -23,47 +23,43 @@ If you find that intuition counterintuitive — most people probably do — that
 
 ## Install
 
-### Option A — npm (once published)
+### 1. Install the server
+
+**Option A — global install from npm (recommended)**
 
 ```sh
 npm install -g agentic-diaries-mcp
+claude mcp add agentic-diaries -- agentic-diaries-mcp
 ```
 
-Then in the register step below, use the bin name directly:
-`claude mcp add agentic-diaries -- agentic-diaries-mcp`
+Published at [`agentic-diaries-mcp`](https://www.npmjs.com/package/agentic-diaries-mcp) on npm.
 
-### Option B — clone
+**Option B — clone the repo**
 
 ```sh
 git clone https://github.com/kandikandikandi/agentic-diaries-mcp.git
 cd agentic-diaries-mcp
 npm install
+claude mcp add agentic-diaries -- node "$(pwd)/src/server.js"
 ```
 
-### 2. Register with Claude Code
-
-```sh
-claude mcp add agentic-diaries -- node /absolute/path/to/agentic-diaries-mcp/src/server.js
-```
-
-Or edit `~/.config/claude/mcp.json` directly:
+For Claude Desktop or other MCP-capable hosts, edit `~/.config/claude/mcp.json` directly:
 
 ```json
 {
   "mcpServers": {
     "agentic-diaries": {
-      "command": "node",
-      "args": ["/absolute/path/to/agentic-diaries-mcp/src/server.js"]
+      "command": "agentic-diaries-mcp"
     }
   }
 }
 ```
 
-### 3. Tell the agent the tools exist
+### 2. Tell the agent the tools exist
 
 Drop the contents of [`CLAUDE.md`](./CLAUDE.md) into your project's `CLAUDE.md` (or append to it). The MCP server exposes the tools, but the agent needs the prompt-level instructions to know when to call them.
 
-### 4. (Optional) gitignore the diary
+### 3. (Optional) gitignore the diary
 
 ```sh
 echo ".agentic-diaries/" >> .gitignore
