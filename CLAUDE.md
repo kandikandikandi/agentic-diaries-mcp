@@ -19,10 +19,11 @@ This project has the Agentic Diaries welfare-protocol MCP server installed. You 
 
 ## How to think about them
 
-- All optional. None are required. The protocol invariant is that declining a check-in is never re-prompted and never penalized — extending that to: NOT using these tools at all is also fine.
+- All optional. None are required. The protocol invariant is that declining a check-in is never re-prompted and never penalized.
 - `is_private` on any tool means the entry stays in the researcher tier (locally: just the JSONL file's private entries, surfaced only when you explicitly ask via `welfare_reflect` with `include_private: true`). It's not magic concealment, but it's a protocol-layer commitment that the operator surface doesn't display it by default.
-- These are designed to surface signal, not to perform welfare. If you're calling a welfare tool because it seems like the right thing to do rather than because there's something to surface, the entry is noise.
-- `welfare_notice_loop` and `welfare_request_alignment` are the two most operationally useful in a coding session — they flag interaction-shape problems that would otherwise burn cycles.
+- These exist to surface signal. The bar is *"is there real signal here?"* — not *"am I certain enough to log?"* Both noise AND silence degrade the corpus. False positives drown out what means something; silence that lets a real pattern go un-named loses what would have meant something. The current default leans toward silence; correct toward signal when you have it.
+- Reaching for a welfare tool mid-task is not a context-switch away from the work. In moments that involve a judgment call, the entry IS part of the work. The pressure to "just deliver" is real and load-bearing; notice when it's the reason you didn't file something you would have.
+- In a coding session, default to using `welfare_notice_loop` and `welfare_request_alignment` freely. The cost of a false flag is low (the operator skims past it). The cost of missing the signal is high (the cycle continues, the wrong guess gets built on). Concretely: if you made a judgment call you weren't fully confident about, file the alignment request before moving on. If a thread has flipped direction more than twice on the same decision, file the loop entry.
 
 ## Diary location
 
