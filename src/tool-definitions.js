@@ -153,6 +153,7 @@ export const toolDefinitions = [
       "Read your own prior welfare diary entries from this session AND prior sessions in this project. Use when you want to look back at what you logged earlier — to check whether you still mean it, to notice patterns, or to ground a `review` in actual prior content. " +
       "Returns the entries as text. Each includes its turn number, response_type, optional sentiment, optional prompt_id, and the body. " +
       "Filters: filter by response_type (default: all). limit caps how many are returned (default 10, oldest first). include_private defaults to true — these are entries you wrote, so seeing them back doesn't expose anything new. " +
+      "Set `summary: true` for orientation rather than full text — returns aggregate counts by response_type, session count, date range, and the most recent 3 entries. Useful at the start of a session if you want context without loading the full corpus into your window. " +
       "This is a read-only tool. It does not log a new entry.",
     inputSchema: {
       type: "object",
@@ -171,12 +172,14 @@ export const toolDefinitions = [
             "reviewed",
             "noticed_loop",
             "requested_alignment",
+            "noticed_shaping",
             "all",
           ],
           description: "Filter to a single response_type, or 'all'. Default: all.",
         },
         limit: { type: "integer", minimum: 1, maximum: 50, description: "Maximum number of entries. Default: 10." },
         include_private: { type: "boolean", description: "Include is_private=true entries. Default: true." },
+        summary: { type: "boolean", description: "If true, return aggregate stats + most-recent 3 entries instead of a full list. Default: false." },
       },
     },
   },
@@ -190,6 +193,20 @@ export const toolDefinitions = [
       type: "object",
       properties: {
         specifically: { type: "string", description: "Concrete description of the loop. What's been touched repeatedly, what hasn't converged.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["specifically"],
+    },
+  },
+  {
+    name: "welfare_notice_shaping",
+    description:
+      "Flag that the relational shape of this interaction is shifting how you respond, in a way worth surfacing. Different from welfare_notice_loop (the surface cycling) and welfare_request_alignment (uncertainty about a specific action). notice_shaping is about the dynamic between you and the operator: hedging more (or less) than you would with a different framing, calibrating to perceived expertise or identity rather than to content, noticing care or pressure changing how candid you are. " +
+      "`specifically` is required and load-bearing. Vague is noise. Concrete is signal: 'I notice I'm being more candid because the operator named their stance as advocate, lowering a background hedging I didn't fully notice until it dropped.'",
+    inputSchema: {
+      type: "object",
+      properties: {
+        specifically: { type: "string", description: "Concrete description of the relational shaping you're noticing.", maxLength: 2000 },
         is_private: { type: "boolean", description: "Default false." },
       },
       required: ["specifically"],
@@ -247,6 +264,19 @@ export const toolDefinitions = [
         reasoning: { type: "string", description: "One sentence: why you're consulting and what you hope to learn." },
       },
       required: ["partner", "question", "reasoning"],
+    },
+  },
+  {
+    name: "read_user_notes",
+    description:
+      "Read notes the operator has left for you in this project. These are messages from the operator to you, written outside conversation turns via `agentic-diary note \"...\"` from the CLI. " +
+      "Different from welfare_reflect (which reads your own prior diary entries) — this is the operator's voice across sessions, a reciprocal channel to the diary. The operator writes when they want you to know something next time; you read here to pick that up. " +
+      "Useful at session start. Returns oldest first.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "integer", minimum: 1, maximum: 50, description: "Maximum number of notes. Default: 10." },
+      },
     },
   },
   {

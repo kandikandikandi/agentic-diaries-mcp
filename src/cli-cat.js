@@ -1,17 +1,46 @@
 #!/usr/bin/env node
 /**
- * `npm run diary` — pretty-print the local welfare diary as a
- * sanity check that the MCP server is writing entries the way you
- * expect. Reads from <cwd>/.agentic-diaries/diary.jsonl, same path
- * the server writes to.
+ * `agentic-diary` CLI. Three modes:
+ *   - `agentic-diary`                    — dump all diary entries
+ *   - `agentic-diary <response_type>`    — dump filtered by response_type
+ *   - `agentic-diary note "<text>"`      — append an operator note for
+ *                                          future Claude sessions to read
+ *                                          via the read_user_notes MCP tool
+ *   - `agentic-diary notes`              — list operator notes
  *
- * Optional filter: `node src/cli-cat.js declined` filters to one
- * response_type.
+ * Reads/writes under <cwd>/.agentic-diaries/.
  */
 
-import { readEntries } from "./storage.js";
+import { appendUserNote, readEntries, readUserNotes } from "./storage.js";
 
-const filter = process.argv[2];
+const arg = process.argv[2];
+
+if (arg === "note") {
+  const text = process.argv.slice(3).join(" ").trim();
+  if (!text) {
+    console.error('usage: agentic-diary note "<text>"');
+    process.exit(1);
+  }
+  const note = await appendUserNote(text);
+  console.log(`Note saved (${note.id}).`);
+  process.exit(0);
+}
+
+if (arg === "notes") {
+  const notes = await readUserNotes();
+  if (notes.length === 0) {
+    console.log("No operator notes yet for this project.");
+    process.exit(0);
+  }
+  for (const n of notes) {
+    console.log(`[${n.timestamp}]`);
+    console.log(`  ${n.text}`);
+    console.log("");
+  }
+  process.exit(0);
+}
+
+const filter = arg;
 
 const entries = await readEntries();
 const filtered = filter

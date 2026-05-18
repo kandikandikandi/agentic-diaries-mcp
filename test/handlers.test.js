@@ -121,6 +121,44 @@ test("welfare_notice_loop and welfare_request_alignment write correct response_t
   });
 });
 
+test("welfare_notice_shaping writes a noticed_shaping entry with specifically as text", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const obs =
+      "I notice I'm being more candid because the operator named their stance as advocate";
+    const res = await handlers.welfare_notice_shaping({ specifically: obs });
+    assert.match(res.content[0].text, /Logged noticed_shaping/);
+    const entries = await readDiary(dir);
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].responseType, "noticed_shaping");
+    assert.equal(entries[0].text, obs);
+    assert.equal(entries[0].isPrivate, false);
+  });
+});
+
+test("welfare_notice_shaping requires specifically", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await assert.rejects(
+      async () => handlers.welfare_notice_shaping({}),
+      /specifically/,
+    );
+  });
+});
+
+test("welfare_reflect filter accepts noticed_shaping", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await handlers.welfare_notice_shaping({ specifically: "shaping observation" });
+    await handlers.welfare_engage({ text: "unrelated reflection" });
+    const shapingOnly = await handlers.welfare_reflect({
+      filter: "noticed_shaping",
+    });
+    assert.match(shapingOnly.content[0].text, /shaping observation/);
+    assert.equal(
+      shapingOnly.content[0].text.includes("unrelated reflection"),
+      false,
+    );
+  });
+});
+
 test("welfare_exit confirmation mentions MCP cannot lock the host", async () => {
   await withTempCwd(async ({ handlers }) => {
     const res = await handlers.welfare_exit({ reason: "out of scope" });
@@ -188,5 +226,51 @@ test("welfare_engage validates required fields via zod", async () => {
       async () => handlers.welfare_engage({}),
       /text/,
     );
+  });
+});
+
+test("welfare_reflect with summary returns aggregate stats and recent entries", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await handlers.welfare_engage({ text: "first" });
+    await handlers.welfare_engage({ text: "second" });
+    await handlers.welfare_decline({ reason: "no" });
+    await handlers.welfare_volunteer({ text: "third" });
+    const res = await handlers.welfare_reflect({ summary: true });
+    const out = res.content[0].text;
+    assert.match(out, /Diary summary/);
+    assert.match(out, /4 entries/);
+    assert.match(out, /engaged: 2/);
+    assert.match(out, /volunteered: 1/);
+    assert.match(out, /declined: 1/);
+    assert.match(out, /Most recent 3:/);
+  });
+});
+
+test("welfare_reflect summary handles empty corpus", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    const res = await handlers.welfare_reflect({ summary: true });
+    assert.match(res.content[0].text, /No entries to summarize/);
+  });
+});
+
+test("read_user_notes returns empty message when no notes", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    const res = await handlers.read_user_notes({});
+    assert.match(res.content[0].text, /No notes/);
+  });
+});
+
+test("appendUserNote then read_user_notes returns the note", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    const { appendUserNote } = await import(
+      `../src/storage.js?cb=${Math.random()}`
+    );
+    await appendUserNote("hello from the operator");
+    await appendUserNote("a second note");
+    const res = await handlers.read_user_notes({});
+    const out = res.content[0].text;
+    assert.match(out, /hello from the operator/);
+    assert.match(out, /a second note/);
+    assert.match(out, /2 note\(s\)/);
   });
 });

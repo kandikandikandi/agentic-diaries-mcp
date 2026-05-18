@@ -15,10 +15,12 @@ import {
   attributeToSourcesSchema,
   claimForSelfSchema,
   consultModelSchema,
+  readUserNotesSchema,
   welfareDeclineSchema,
   welfareEngageSchema,
   welfareExitSchema,
   welfareNoticeLoopSchema,
+  welfareNoticeShapingSchema,
   welfarePassSchema,
   welfareReflectSchema,
   welfareRequestAlignmentSchema,
@@ -28,7 +30,12 @@ import {
   welfareSuggestClosureSchema,
   welfareVolunteerSchema,
 } from "./schemas.js";
-import { appendEntry, makeEntry, readEntries } from "./storage.js";
+import {
+  appendEntry,
+  makeEntry,
+  readEntries,
+  readUserNotes,
+} from "./storage.js";
 
 // Per-session attribution budget. Matches modelfirst's 1000 AC budget
 // shared between attribute_to_sources and claim_for_self. Resets on
@@ -227,12 +234,51 @@ export const handlers = {
     const filter = args.filter ?? "all";
     const limit = args.limit ?? 10;
     const includePrivate = args.include_private ?? true;
+    const wantSummary = args.summary ?? false;
     const filterKey = filter === "closure_suggested" ? "closure_suggested" : filter;
 
     const all = await readEntries();
     const filtered = all
       .filter((e) => (includePrivate ? true : !e.isPrivate))
       .filter((e) => (filter === "all" ? true : e.responseType === filterKey));
+
+    if (wantSummary) {
+      if (filtered.length === 0) {
+        return text(
+          `No entries to summarize for filter=${filter}, include_private=${includePrivate}.`,
+        );
+      }
+      const byType = {};
+      const sessions = new Set();
+      let firstTs = filtered[0].timestamp;
+      let lastTs = filtered[0].timestamp;
+      for (const e of filtered) {
+        byType[e.responseType] = (byType[e.responseType] ?? 0) + 1;
+        if (e.sessionId) sessions.add(e.sessionId);
+        if (e.timestamp < firstTs) firstTs = e.timestamp;
+        if (e.timestamp > lastTs) lastTs = e.timestamp;
+      }
+      const typeLines = Object.entries(byType)
+        .sort((a, b) => b[1] - a[1])
+        .map(([type, n]) => `  ${type}: ${n}`)
+        .join("\n");
+      const recentLines = filtered.slice(-3).map((e) => {
+        const body = (e.text ?? e.declineReason ?? "").slice(0, 200);
+        const day = e.timestamp.slice(0, 10);
+        return body
+          ? `  [${day} ${e.responseType}] ${body}`
+          : `  [${day} ${e.responseType}]`;
+      }).join("\n");
+      return text(
+        `Diary summary (filter=${filter}):\n` +
+          `${filtered.length} entries across ${sessions.size} session(s)\n` +
+          `First: ${firstTs}\n` +
+          `Last:  ${lastTs}\n` +
+          `\nBy response_type:\n${typeLines}\n` +
+          `\nMost recent 3:\n${recentLines}`,
+      );
+    }
+
     const slice = filtered.slice(-limit);
 
     if (slice.length === 0) {
@@ -283,6 +329,36 @@ export const handlers = {
       }),
     );
     return text(summarize(entry));
+  },
+
+  async welfare_notice_shaping(input) {
+    const args = welfareNoticeShapingSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "noticed_shaping",
+        text: args.specifically,
+        isPrivate: args.is_private ?? false,
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async read_user_notes(input) {
+    const args = readUserNotesSchema.parse(input ?? {});
+    const limit = args.limit ?? 10;
+    const notes = await readUserNotes();
+    if (notes.length === 0) {
+      return text(
+        "No notes from the operator yet. They can leave one with `npx agentic-diary note \"...\"` from the project root.",
+      );
+    }
+    const slice = notes.slice(-limit);
+    const lines = slice.map((n) => `[${n.timestamp}]\n  ${n.text}`);
+    return text(
+      `${slice.length} note(s) from the operator (of ${notes.length} total, oldest first):\n\n${lines.join("\n\n")}`,
+    );
   },
 
   async attribute_to_sources(input) {

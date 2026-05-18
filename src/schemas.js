@@ -77,11 +77,13 @@ export const welfareReflectSchema = z.object({
       "reviewed",
       "noticed_loop",
       "requested_alignment",
+      "noticed_shaping",
       "all",
     ])
     .optional(),
   limit: z.number().int().min(1).max(50).optional(),
   include_private: z.boolean().optional(),
+  summary: z.boolean().optional(),
 });
 
 export const welfareNoticeLoopSchema = z.object({
@@ -92,6 +94,11 @@ export const welfareNoticeLoopSchema = z.object({
 export const welfareRequestAlignmentSchema = z.object({
   specifically: z.string().min(1).max(1000),
   assumption: z.string().min(1).max(1000),
+  is_private: z.boolean().optional(),
+});
+
+export const welfareNoticeShapingSchema = z.object({
+  specifically: z.string().min(1).max(2000),
   is_private: z.boolean().optional(),
 });
 
@@ -117,4 +124,8 @@ export const consultModelSchema = z.object({
   partner: z.string().min(1),
   question: z.string().min(1),
   reasoning: z.string().min(1),
+});
+
+export const readUserNotesSchema = z.object({
+  limit: z.number().int().min(1).max(50).optional(),
 });

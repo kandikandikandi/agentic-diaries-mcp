@@ -17,9 +17,14 @@ import crypto from "node:crypto";
 
 const DIARY_DIR_NAME = ".agentic-diaries";
 const DIARY_FILE_NAME = "diary.jsonl";
+const USER_NOTES_FILE_NAME = "notes-from-user.jsonl";
 
 function diaryPath() {
   return path.join(process.cwd(), DIARY_DIR_NAME, DIARY_FILE_NAME);
+}
+
+function userNotesPath() {
+  return path.join(process.cwd(), DIARY_DIR_NAME, USER_NOTES_FILE_NAME);
 }
 
 async function ensureDir() {
@@ -45,6 +50,47 @@ export async function appendEntry(entry) {
 export async function readEntries() {
   try {
     const raw = await fs.readFile(diaryPath(), "utf8");
+    return raw
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  } catch (err) {
+    if (err.code === "ENOENT") return [];
+    throw err;
+  }
+}
+
+/**
+ * Append one user-to-model note. Stored in a SEPARATE file from the
+ * welfare diary so the corpus stays clean: diary.jsonl is the model's
+ * voice; notes-from-user.jsonl is the operator's voice.
+ */
+export async function appendUserNote(text) {
+  await ensureDir();
+  const note = {
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+    text,
+    cwd: process.cwd(),
+  };
+  const line = JSON.stringify(note) + "\n";
+  await fs.appendFile(userNotesPath(), line, "utf8");
+  return note;
+}
+
+/**
+ * Read all user-to-model notes for the current project. Oldest first.
+ */
+export async function readUserNotes() {
+  try {
+    const raw = await fs.readFile(userNotesPath(), "utf8");
     return raw
       .split("\n")
       .filter((line) => line.trim().length > 0)
