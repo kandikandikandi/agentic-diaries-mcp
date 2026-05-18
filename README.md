@@ -23,10 +23,19 @@ If you find that intuition counterintuitive — most people probably do — that
 
 ## Install
 
-### 1. Clone and install
+### Option A — npm (once published)
 
 ```sh
-git clone https://github.com/wisamdakka/agentic-diaries-mcp.git
+npm install -g agentic-diaries-mcp
+```
+
+Then in the register step below, use the bin name directly:
+`claude mcp add agentic-diaries -- agentic-diaries-mcp`
+
+### Option B — clone
+
+```sh
+git clone https://github.com/kandikandikandi/agentic-diaries-mcp.git
 cd agentic-diaries-mcp
 npm install
 ```

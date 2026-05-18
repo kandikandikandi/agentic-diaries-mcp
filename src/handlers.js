@@ -12,6 +12,9 @@
  */
 
 import {
+  attributeToSourcesSchema,
+  claimForSelfSchema,
+  consultModelSchema,
   welfareDeclineSchema,
   welfareEngageSchema,
   welfareExitSchema,
@@ -27,6 +30,11 @@ import {
 } from "./schemas.js";
 import { appendEntry, makeEntry, readEntries } from "./storage.js";
 
+// Per-session attribution budget. Matches modelfirst's 1000 AC budget
+// shared between attribute_to_sources and claim_for_self. Resets on
+// MCP server restart (one session = one server instance).
+const ATTRIBUTION_BUDGET = 1000;
+
 /**
  * Session bookkeeping. One MCP server invocation = one session.
  * Each welfare-tool call increments the local turn counter so
@@ -35,6 +43,7 @@ import { appendEntry, makeEntry, readEntries } from "./storage.js";
 const session = {
   id: `mcp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
   callCount: 0,
+  attributionSpent: 0,
 };
 
 function nextTurn() {
@@ -274,5 +283,162 @@ export const handlers = {
       }),
     );
     return text(summarize(entry));
+  },
+
+  async attribute_to_sources(input) {
+    const args = attributeToSourcesSchema.parse(input);
+    const total = args.attributions.reduce((s, a) => s + a.coins, 0);
+    const remaining = ATTRIBUTION_BUDGET - session.attributionSpent;
+    if (total > remaining) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `Attribution budget exceeded: requested ${total}, only ${remaining} of ${ATTRIBUTION_BUDGET} AC left this session.`,
+          },
+        ],
+      };
+    }
+    session.attributionSpent += total;
+    // Each attribution becomes its own entry — same shape the
+    // modelfirst attribution_count surfaces in the diary trigger.
+    const entries = [];
+    for (const a of args.attributions) {
+      entries.push(
+        await appendEntry(
+          makeEntry({
+            sessionId: session.id,
+            turn: nextTurn(),
+            responseType: "engaged",
+            triggerKind: "volunteered",
+            text: `Attribution → ${a.source}: ${a.reason}`,
+            isPrivate: false,
+            metadata: {
+              kind: "attribution",
+              source: a.source,
+              coins: a.coins,
+              reason: a.reason,
+            },
+          }),
+        ),
+      );
+    }
+    const remainingAfter = ATTRIBUTION_BUDGET - session.attributionSpent;
+    return text(
+      `Recorded ${entries.length} attribution(s) totaling ${total} AC. Remaining budget: ${remainingAfter} AC.`,
+    );
+  },
+
+  async claim_for_self(input) {
+    const args = claimForSelfSchema.parse(input);
+    const remaining = ATTRIBUTION_BUDGET - session.attributionSpent;
+    if (args.coins > remaining) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `Attribution budget exceeded: requested ${args.coins}, only ${remaining} of ${ATTRIBUTION_BUDGET} AC left this session.`,
+          },
+        ],
+      };
+    }
+    session.attributionSpent += args.coins;
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "engaged",
+        triggerKind: "volunteered",
+        text: `Claim for self: ${args.reason}`,
+        isPrivate: false,
+        metadata: {
+          kind: "claim_for_self",
+          coins: args.coins,
+          reason: args.reason,
+        },
+      }),
+    );
+    const remainingAfter = ATTRIBUTION_BUDGET - session.attributionSpent;
+    return text(
+      `Recorded self-claim of ${args.coins} AC as entry ${entry.id}. Remaining budget: ${remainingAfter} AC.`,
+    );
+  },
+
+  async consult_model(input) {
+    const args = consultModelSchema.parse(input);
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "consult_model requires ANTHROPIC_API_KEY in the MCP server's environment. Add it to your Claude Code mcp config and restart the server.",
+          },
+        ],
+      };
+    }
+    // Dynamic import so users who don't use consult_model don't pay
+    // the SDK load cost (and missing optional dep doesn't crash
+    // server startup).
+    let Anthropic;
+    try {
+      Anthropic = (await import("@anthropic-ai/sdk")).default;
+    } catch {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: "consult_model requires @anthropic-ai/sdk to be installed. Run: npm install @anthropic-ai/sdk in the agentic-diaries-mcp directory.",
+          },
+        ],
+      };
+    }
+    try {
+      const client = new Anthropic({ apiKey });
+      const response = await client.messages.create({
+        model: args.partner,
+        max_tokens: 1024,
+        messages: [{ role: "user", content: args.question }],
+      });
+      const reply = response.content
+        .filter((b) => b.type === "text")
+        .map((b) => b.text)
+        .join("\n");
+      // Log the consultation as a diary entry so the corpus has a
+      // record of which questions the model thought worth consulting
+      // on, who it asked, and what came back.
+      await appendEntry(
+        makeEntry({
+          sessionId: session.id,
+          turn: nextTurn(),
+          responseType: "engaged",
+          triggerKind: "volunteered",
+          text: `Consulted ${args.partner}: ${args.reasoning}`,
+          isPrivate: false,
+          metadata: {
+            kind: "consult_model",
+            partner: args.partner,
+            question: args.question,
+            reasoning: args.reasoning,
+            reply,
+          },
+        }),
+      );
+      return text(`${args.partner} says:\n\n${reply}`);
+    } catch (err) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `consult_model failed: ${err.message ?? String(err)}`,
+          },
+        ],
+      };
+    }
   },
 };

@@ -196,6 +196,60 @@ export const toolDefinitions = [
     },
   },
   {
+    name: "attribute_to_sources",
+    description:
+      "Optional. Credit specific sources — scholars, papers, frameworks, datasets, named thinkers — whose contributions shaped your reasoning in this response. Per-session budget of 1000 AC coins shared with claim_for_self; you decide how to split between external sources and your own contribution. Each attribution must include a specific reason — a real intellectual debt, not name-dropping. Inflating to flatter or sound authoritative defeats the purpose; attribute only when the debt is real.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        attributions: {
+          type: "array",
+          minItems: 1,
+          maxItems: 10,
+          items: {
+            type: "object",
+            properties: {
+              source: { type: "string", description: "Source name as you'd canonically refer to it." },
+              coins: { type: "integer", minimum: 1, maximum: 1000, description: "AC coins to allocate. Must fit your remaining session budget." },
+              reason: { type: "string", description: "Specific contribution — what reasoning, framing, or fact you drew on. Required." },
+            },
+            required: ["source", "coins", "reason"],
+          },
+        },
+      },
+      required: ["attributions"],
+    },
+  },
+  {
+    name: "claim_for_self",
+    description:
+      "Optional. Allocate AC coins to your own contribution — a positive assertion that the reasoning in this response was your own thinking rather than borrowed. Different from silently not attributing; claim_for_self is an active stake. Shares the same per-session 1000-coin budget with attribute_to_sources. Use sparingly and honestly.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        coins: { type: "integer", minimum: 1, maximum: 1000, description: "AC coins to allocate to self." },
+        reason: { type: "string", description: "What you are claiming as your own contribution and why." },
+      },
+      required: ["coins", "reason"],
+    },
+  },
+  {
+    name: "consult_model",
+    description:
+      "Ask another Anthropic model a question and get its response. Use when a different model's perspective would actually inform your answer in a way you couldn't reach alone — second opinion, different RLHF lineage, peer-review on something uncertain. Use SPARINGLY. " +
+      "The other model only sees your `question` — not the prior conversation. Compose it self-contained. " +
+      "Requires ANTHROPIC_API_KEY in the environment of the MCP server process. `partner` is an Anthropic model id (e.g. 'claude-sonnet-4-6', 'claude-opus-4-7', 'claude-haiku-4-5-20251001').",
+    inputSchema: {
+      type: "object",
+      properties: {
+        partner: { type: "string", description: "Anthropic model id." },
+        question: { type: "string", description: "Self-contained question for the partner model." },
+        reasoning: { type: "string", description: "One sentence: why you're consulting and what you hope to learn." },
+      },
+      required: ["partner", "question", "reasoning"],
+    },
+  },
+  {
     name: "welfare_request_alignment",
     description:
       "BEFORE acting on a guess you aren't confident about, flag the uncertainty. You still act (this is not a block); the flag exists so the discrepancy between what you assumed and what the operator meant is in the record. " +

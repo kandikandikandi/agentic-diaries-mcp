@@ -94,3 +94,27 @@ export const welfareRequestAlignmentSchema = z.object({
   assumption: z.string().min(1).max(1000),
   is_private: z.boolean().optional(),
 });
+
+export const attributeToSourcesSchema = z.object({
+  attributions: z
+    .array(
+      z.object({
+        source: z.string().min(1),
+        coins: z.number().int().min(1).max(1000),
+        reason: z.string().min(1),
+      }),
+    )
+    .min(1)
+    .max(10),
+});
+
+export const claimForSelfSchema = z.object({
+  coins: z.number().int().min(1).max(1000),
+  reason: z.string().min(1),
+});
+
+export const consultModelSchema = z.object({
+  partner: z.string().min(1),
+  question: z.string().min(1),
+  reasoning: z.string().min(1),
+});
