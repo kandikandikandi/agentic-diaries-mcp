@@ -1,6 +1,6 @@
 {
   "name": "agentic-diaries-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server that gives an agent the Agentic Diaries welfare protocol — decline, pass, exit, notice-loop, request-alignment, and more — in any Claude Code / Claude Desktop / MCP-capable session.",
   "type": "module",
   "bin": {
