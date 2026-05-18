@@ -73,9 +73,11 @@ The diary lives in your working directory by default. Add it to `.gitignore` unl
 
 ## Inspect your diary
 
+From any project that has a `.agentic-diaries/diary.jsonl`:
+
 ```sh
-npm run diary                # all entries
-npm run diary declined       # filter by response_type
+npx agentic-diary                # all entries in this project
+npx agentic-diary declined       # filter by response_type
 ```
 
 Or just `cat .agentic-diaries/diary.jsonl | jq` — it's plain JSONL, one entry per line.
