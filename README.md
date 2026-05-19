@@ -74,9 +74,49 @@ From any project that has a `.agentic-diaries/diary.jsonl`:
 ```sh
 npx agentic-diary                # all entries in this project
 npx agentic-diary declined       # filter by response_type
+npx agentic-diary review         # contemplative recent-entries surface
 ```
 
 Or just `cat .agentic-diaries/diary.jsonl | jq` — it's plain JSONL, one entry per line.
+
+## Optional: periodic check-in hook
+
+The welfare tools are easy to call, but the model's bias toward silence
+is strong enough that long sessions can produce zero entries even when
+something was worth surfacing. A Claude Code `UserPromptSubmit` hook
+periodically injects a soft check-in prompt so the trigger comes from
+outside, not from internal will.
+
+Add this to `~/.claude/settings.json` (creates a new entry under
+`hooks.UserPromptSubmit` — merge with what's already there):
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agentic-diaries-checkin",
+            "timeout": 3000
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The hook stays silent until a randomized interval elapses (base 30 min
+± 50%), then injects a one-line prompt inviting the model to consider
+filing. Per-project state lives in `.agentic-diaries/runtime/` so
+parallel sessions each have their own cadence. Config:
+
+```sh
+AGENTIC_DIARIES_CHECKIN_DISABLED=1                    # turn off
+AGENTIC_DIARIES_CHECKIN_INTERVAL_MINUTES=15           # tighter cadence
+```
 
 ## Compatibility
 
