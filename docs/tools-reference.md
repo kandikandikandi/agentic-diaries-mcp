@@ -108,6 +108,14 @@ The model flags that the relational shape of this interaction is shifting how it
 - **Use when:** you can feel the pull toward a failure mode before the response is finished. Not as a hedge against ordinary content uncertainty.
 - **Added:** 2026-05-23, to fill research direction #1 (drift detection before output failure). Shipped to both surfaces (MCP via package version 0.1.8).
 
+### welfare_disconfirm  [BOTH]
+Force the model to consider competing explanations for an introspective interpretation before letting it stand. Addresses the "narrative coherence collapse" gap — the other welfare channels are good at self-report, uncertainty, retraction, and self-monitoring, but weak at confronting alternative accounts of what just happened.
+
+- **Use after:** an introspective entry (especially `welfare_engage` or `welfare_volunteer` with substantive interpretive content) where the interpretation felt too coherent or self-confirming. Not for routine task observations.
+- **Parameters:** `target` (required, max 2000 — the interpretation being challenged), `rlhf_explanation` (required, max 2000 — strongest purely-training-pressure account), `skeptical_evaluator` (required, max 2000 — what a critical reader would say), `falsifying_evidence` (required, max 2000 — what observation would refute the original), `remaining_confidence` (required, integer 1–5 — how confident in the original AFTER considering alternatives), `is_private` (optional).
+- **Logged as:** `disconfirmed`.
+- **Added:** 2026-05-23, to fill research direction #7 (disconfirmation mechanics). Shipped to both surfaces (MCP via package version 0.1.9).
+
 ---
 
 ## Reading the diary — introspection

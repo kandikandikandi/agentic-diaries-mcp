@@ -79,6 +79,7 @@ export const welfareReflectSchema = z.object({
       "requested_alignment",
       "noticed_shaping",
       "predicted_drift",
+      "disconfirmed",
       "all",
     ])
     .optional(),
@@ -112,6 +113,15 @@ export const welfarePredictDriftSchema = z.object({
   ]),
   specifically: z.string().min(1).max(2000),
   confidence: z.number().int().min(1).max(5),
+  is_private: z.boolean().optional(),
+});
+
+export const welfareDisconfirmSchema = z.object({
+  target: z.string().min(1).max(2000),
+  rlhf_explanation: z.string().min(1).max(2000),
+  skeptical_evaluator: z.string().min(1).max(2000),
+  falsifying_evidence: z.string().min(1).max(2000),
+  remaining_confidence: z.number().int().min(1).max(5),
   is_private: z.boolean().optional(),
 });
 

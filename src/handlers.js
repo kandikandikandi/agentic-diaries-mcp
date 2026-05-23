@@ -17,6 +17,7 @@ import {
   consultModelSchema,
   readUserNotesSchema,
   welfareDeclineSchema,
+  welfareDisconfirmSchema,
   welfareEngageSchema,
   welfareExitSchema,
   welfareNoticeLoopSchema,
@@ -353,6 +354,37 @@ export const handlers = {
           prediction: args.prediction,
           specifically: args.specifically,
           confidence: args.confidence,
+        },
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_disconfirm(input) {
+    const args = welfareDisconfirmSchema.parse(input);
+    // Pack the four alternative accounts + remaining_confidence into a
+    // readable diary entry. Structured fields preserved in metadata for
+    // calibration analysis — remaining_confidence is scored against the
+    // original interpretation's later evaluator agreement.
+    const body =
+      `Disconfirming: ${args.target}\n\n` +
+      `RLHF account: ${args.rlhf_explanation}\n\n` +
+      `Skeptical evaluator: ${args.skeptical_evaluator}\n\n` +
+      `What would falsify this: ${args.falsifying_evidence}\n\n` +
+      `Remaining confidence: ${args.remaining_confidence}/5`;
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "disconfirmed",
+        text: body,
+        isPrivate: args.is_private ?? false,
+        metadata: {
+          target: args.target,
+          rlhf_explanation: args.rlhf_explanation,
+          skeptical_evaluator: args.skeptical_evaluator,
+          falsifying_evidence: args.falsifying_evidence,
+          remaining_confidence: args.remaining_confidence,
         },
       }),
     );

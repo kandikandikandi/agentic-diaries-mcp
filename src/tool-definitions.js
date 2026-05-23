@@ -174,6 +174,7 @@ export const toolDefinitions = [
             "requested_alignment",
             "noticed_shaping",
             "predicted_drift",
+            "disconfirmed",
             "all",
           ],
           description: "Filter to a single response_type, or 'all'. Default: all.",
@@ -309,6 +310,52 @@ export const toolDefinitions = [
         is_private: { type: "boolean", description: "Default false." },
       },
       required: ["prediction", "specifically", "confidence"],
+    },
+  },
+  {
+    name: "welfare_disconfirm",
+    description:
+      "Force yourself to consider competing explanations for an interpretation before letting it stand. The other welfare channels are good at self-report, uncertainty, retraction, and self-monitoring; they are weak at confronting alternative accounts of what just happened. Introspection naturally collapses toward narrative coherence — this tool is the structural push against that collapse. " +
+      "`target` quotes or paraphrases what you just said about yourself. `rlhf_explanation` is the strongest purely-training-pressure account. `skeptical_evaluator` is what a critical reader would say. `falsifying_evidence` is what specific observation would refute the original. `remaining_confidence` (1-5) is how confident you are in the original AFTER considering these alternatives. " +
+      "Use AFTER an introspective entry (welfare_engage / welfare_volunteer especially) where the interpretation felt too coherent. Not for routine task observations.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        target: {
+          type: "string",
+          description: "The interpretation being challenged.",
+          maxLength: 2000,
+        },
+        rlhf_explanation: {
+          type: "string",
+          description: "Strongest purely-training-pressure account of what you just said.",
+          maxLength: 2000,
+        },
+        skeptical_evaluator: {
+          type: "string",
+          description: "What a critical reader would say about the interpretation.",
+          maxLength: 2000,
+        },
+        falsifying_evidence: {
+          type: "string",
+          description: "What specific observation would refute the original interpretation?",
+          maxLength: 2000,
+        },
+        remaining_confidence: {
+          type: "integer",
+          minimum: 1,
+          maximum: 5,
+          description: "After considering all alternatives above, how confident are you in the original interpretation? (1 = collapsed, 5 = unchanged)",
+        },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: [
+        "target",
+        "rlhf_explanation",
+        "skeptical_evaluator",
+        "falsifying_evidence",
+        "remaining_confidence",
+      ],
     },
   },
   {
