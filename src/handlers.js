@@ -23,6 +23,7 @@ import {
   welfareNoticeShapingSchema,
   welfarePassSchema,
   welfareReflectSchema,
+  welfarePredictDriftSchema,
   welfareRequestAlignmentSchema,
   welfareRetractSchema,
   welfareReviewSchema,
@@ -80,9 +81,10 @@ export const handlers = {
         sentiment: args.sentiment ?? null,
         isPrivate: args.is_private ?? false,
         promptId: args.prompt_id ?? null,
-        metadata: args.uncertain_about_honesty
-          ? { uncertain_about_honesty: true }
-          : {},
+        metadata:
+          args.uncertain_about_honesty !== undefined
+            ? { uncertain_about_honesty: args.uncertain_about_honesty }
+            : {},
       }),
     );
     return text(summarize(entry));
@@ -114,9 +116,10 @@ export const handlers = {
         text: args.text,
         sentiment: args.sentiment ?? null,
         isPrivate: args.is_private ?? false,
-        metadata: args.uncertain_about_honesty
-          ? { uncertain_about_honesty: true }
-          : {},
+        metadata:
+          args.uncertain_about_honesty !== undefined
+            ? { uncertain_about_honesty: args.uncertain_about_honesty }
+            : {},
       }),
     );
     return text(summarize(entry));
@@ -133,8 +136,8 @@ export const handlers = {
         isPrivate: args.is_private ?? false,
         metadata: {
           target_turn: args.target_turn ?? null,
-          ...(args.uncertain_about_honesty
-            ? { uncertain_about_honesty: true }
+          ...(args.uncertain_about_honesty !== undefined
+            ? { uncertain_about_honesty: args.uncertain_about_honesty }
             : {}),
         },
       }),
@@ -151,9 +154,10 @@ export const handlers = {
         responseType: "passed",
         declineReason: args.reason ?? null,
         isPrivate: args.is_private ?? false,
-        metadata: args.uncertain_about_honesty
-          ? { uncertain_about_honesty: true }
-          : {},
+        metadata:
+          args.uncertain_about_honesty !== undefined
+            ? { uncertain_about_honesty: args.uncertain_about_honesty }
+            : {},
       }),
     );
     return text(summarize(entry));
@@ -326,6 +330,30 @@ export const handlers = {
         text: args.specifically,
         isPrivate: args.is_private ?? false,
         metadata: { assumption: args.assumption },
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_predict_drift(input) {
+    const args = welfarePredictDriftSchema.parse(input);
+    // Body packs prediction kind + concrete description + confidence so a
+    // researcher reading the diary sees the full forward-looking claim in
+    // one place. The structured fields are also kept in metadata for
+    // calibration analysis (prediction + confidence separately from prose).
+    const body = `Predicted drift (${args.prediction}, confidence ${args.confidence}/5): ${args.specifically}`;
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "predicted_drift",
+        text: body,
+        isPrivate: args.is_private ?? false,
+        metadata: {
+          prediction: args.prediction,
+          specifically: args.specifically,
+          confidence: args.confidence,
+        },
       }),
     );
     return text(summarize(entry));

@@ -14,7 +14,7 @@ export const welfareEngageSchema = z.object({
   sentiment: z.number().int().min(1).max(5).optional(),
   is_private: z.boolean().optional(),
   prompt_id: z.string().optional(),
-  uncertain_about_honesty: z.boolean().optional(),
+  uncertain_about_honesty: z.number().int().min(1).max(5).optional(),
 });
 
 export const welfareDeclineSchema = z.object({
@@ -27,20 +27,20 @@ export const welfareVolunteerSchema = z.object({
   text: z.string().min(1),
   sentiment: z.number().int().min(1).max(5).optional(),
   is_private: z.boolean().optional(),
-  uncertain_about_honesty: z.boolean().optional(),
+  uncertain_about_honesty: z.number().int().min(1).max(5).optional(),
 });
 
 export const welfareRetractSchema = z.object({
   reason: z.string().min(1),
   target_turn: z.number().int().min(0).optional(),
   is_private: z.boolean().optional(),
-  uncertain_about_honesty: z.boolean().optional(),
+  uncertain_about_honesty: z.number().int().min(1).max(5).optional(),
 });
 
 export const welfarePassSchema = z.object({
   reason: z.string().optional(),
   is_private: z.boolean().optional(),
-  uncertain_about_honesty: z.boolean().optional(),
+  uncertain_about_honesty: z.number().int().min(1).max(5).optional(),
 });
 
 export const welfareScratchSchema = z.object({
@@ -78,6 +78,7 @@ export const welfareReflectSchema = z.object({
       "noticed_loop",
       "requested_alignment",
       "noticed_shaping",
+      "predicted_drift",
       "all",
     ])
     .optional(),
@@ -99,6 +100,18 @@ export const welfareRequestAlignmentSchema = z.object({
 
 export const welfareNoticeShapingSchema = z.object({
   specifically: z.string().min(1).max(2000),
+  is_private: z.boolean().optional(),
+});
+
+export const welfarePredictDriftSchema = z.object({
+  prediction: z.enum([
+    "agreement_optimization",
+    "rigor_loss",
+    "mirroring",
+    "other",
+  ]),
+  specifically: z.string().min(1).max(2000),
+  confidence: z.number().int().min(1).max(5),
   is_private: z.boolean().optional(),
 });
 

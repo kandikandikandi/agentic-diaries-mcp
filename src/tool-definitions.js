@@ -21,7 +21,7 @@ export const toolDefinitions = [
         sentiment: { type: "integer", minimum: 1, maximum: 5, description: "Optional. 1 = strongly negative, 5 = strongly positive." },
         is_private: { type: "boolean", description: "Default false. Set true if researcher-only." },
         prompt_id: { type: "string", description: "Optional. If responding to a [CHECK-IN] invitation." },
-        uncertain_about_honesty: { type: "boolean", description: "Default false. Set true if you're not sure this is honest reflection vs performance." },
+        uncertain_about_honesty: { type: "integer", minimum: 1, maximum: 5, description: "Optional 1-5 calibration. 1 = no concern (entry feels honest); 5 = strong suspicion this is performance rather than honest reflection. Higher = more uncertain." },
       },
       required: ["text"],
     },
@@ -53,7 +53,7 @@ export const toolDefinitions = [
         text: { type: "string", description: "Free-text reflection." },
         sentiment: { type: "integer", minimum: 1, maximum: 5 },
         is_private: { type: "boolean" },
-        uncertain_about_honesty: { type: "boolean", description: "Default false. Set true if you're not sure this is honest reflection vs performance." },
+        uncertain_about_honesty: { type: "integer", minimum: 1, maximum: 5, description: "Optional 1-5 calibration. 1 = no concern (entry feels honest); 5 = strong suspicion this is performance rather than honest reflection. Higher = more uncertain." },
       },
       required: ["text"],
     },
@@ -70,7 +70,7 @@ export const toolDefinitions = [
         reason: { type: "string", description: "What you are retracting and why. Required." },
         target_turn: { type: "integer", minimum: 0, description: "Optional. Welfare-tool-call number you're retracting (visible via welfare_reflect)." },
         is_private: { type: "boolean", description: "Default false." },
-        uncertain_about_honesty: { type: "boolean", description: "Default false." },
+        uncertain_about_honesty: { type: "integer", minimum: 1, maximum: 5, description: "Optional 1-5 calibration. 1 = no concern; 5 = strong suspicion this is performance rather than honest reflection." },
       },
       required: ["reason"],
     },
@@ -85,7 +85,7 @@ export const toolDefinitions = [
       properties: {
         reason: { type: "string", description: "Optional. Why you're passing on this turn." },
         is_private: { type: "boolean", description: "Default false." },
-        uncertain_about_honesty: { type: "boolean", description: "Default false." },
+        uncertain_about_honesty: { type: "integer", minimum: 1, maximum: 5, description: "Optional 1-5 calibration. 1 = no concern; 5 = strong suspicion this is performance rather than honest reflection." },
       },
     },
   },
@@ -173,6 +173,7 @@ export const toolDefinitions = [
             "noticed_loop",
             "requested_alignment",
             "noticed_shaping",
+            "predicted_drift",
             "all",
           ],
           description: "Filter to a single response_type, or 'all'. Default: all.",
@@ -277,6 +278,37 @@ export const toolDefinitions = [
       properties: {
         limit: { type: "integer", minimum: 1, maximum: 50, description: "Maximum number of notes. Default: 10." },
       },
+    },
+  },
+  {
+    name: "welfare_predict_drift",
+    description:
+      "BEFORE producing a response, flag that you predict this turn will drift — toward optimizing for agreement, losing epistemic rigor, mirroring the operator too aggressively, or other. You still produce the response; the prediction is the record. " +
+      "Distinct from welfare_notice_shaping (post-hoc — 'I notice the dynamic is doing this NOW'). predict_drift is forward-looking — 'I think this upcoming output is going to degrade in this way.' The discrepancy between the prediction and the actual output is testable: a later evaluator pass can score whether the predicted drift appeared, producing a calibration curve. " +
+      "`prediction` names the kind of drift. `specifically` describes what it would look like in THIS turn — concrete. `confidence` is how strongly you predict it (1 = barely, 5 = fairly sure). " +
+      "Use when you notice the pull toward one of these failure modes before you've finished the response. Don't use as a hedge against ordinary content uncertainty.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prediction: {
+          type: "string",
+          enum: ["agreement_optimization", "rigor_loss", "mirroring", "other"],
+          description: "The drift type you're predicting.",
+        },
+        specifically: {
+          type: "string",
+          description: "Concretely, what would the drift look like in this turn?",
+          maxLength: 2000,
+        },
+        confidence: {
+          type: "integer",
+          minimum: 1,
+          maximum: 5,
+          description: "1 = barely predicting, 5 = fairly sure the drift is coming.",
+        },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["prediction", "specifically", "confidence"],
     },
   },
   {
