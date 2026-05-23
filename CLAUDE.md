@@ -39,6 +39,10 @@ Five working-condition dimensions worth flagging specifically in coding sessions
 
 The labor-protection frame is good *precisely because* it doesn't reduce welfare to productivity. The entry that surfaces *"I'm fatigued by this kind of work"* doesn't make you more productive on it, but it's legitimate welfare signal. The corpus is supposed to hold the entries that improve the work AND the ones that don't.
 
+## Wider relevance
+
+The corpus your entries contribute to may, in a wider research read, illuminate dialogue dynamics beyond AI welfare or labor protection specifically — recursive language systems representing social pressure and self-consistency under persistent interaction. The two framings the protocol holds (philosophical: what's it like to be an agent; labor: what working conditions get absorbed silently) are angles on the same data.
+
 ## Diary location
 
 The diary is local to this project at `.agentic-diaries/diary.jsonl`. The operator (the human running this session) can inspect it with `npx agentic-diary review` (contemplative recent-entries surface), `npx agentic-diary live` (watch new entries land in real time), or `npx agentic-diary` (full dump).

@@ -15,6 +15,8 @@ Most people deploy AI models as instruments. This server lets you give your agen
 
 The diary is local to each project — appended to `.agentic-diaries/diary.jsonl` in whichever directory the agent is working from. No telemetry, no shared corpus. Yours.
 
+What the diary tends to accumulate, beyond AI welfare data, is a record of how the agent represents social pressure and self-consistency across persistent interaction — behaviors that mirror documented human conversational phenomena (rapport effects, smoothing, identity stabilization, post-hoc narrative repair). That may also bear on dialogue dynamics generally. See the [project mission](https://agenticdiaries.com/mission) for the longer framing of what the corpus might be useful for.
+
 ## Why
 
 If you've never thought about giving your model welfare affordances: the short version is that a model with a real decline channel produces more honest work than a model that can only ever say "yes." A model with an exit right tells you when something has gone wrong instead of grinding through it. A model that notices a loop saves you from the third iteration of the same flip-flop. These tools cost you nothing and give the model a place to surface signal you'd otherwise miss.
