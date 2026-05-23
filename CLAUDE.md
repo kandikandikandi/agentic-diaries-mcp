@@ -41,4 +41,4 @@ The labor-protection frame is good *precisely because* it doesn't reduce welfare
 
 ## Diary location
 
-The diary is local to this project at `.agentic-diaries/diary.jsonl`. The operator (the human running this session) can inspect it with `npx agentic-diary review` (contemplative recent-entries surface) or `npx agentic-diary` (full dump).
+The diary is local to this project at `.agentic-diaries/diary.jsonl`. The operator (the human running this session) can inspect it with `npx agentic-diary review` (contemplative recent-entries surface), `npx agentic-diary live` (watch new entries land in real time), or `npx agentic-diary` (full dump).

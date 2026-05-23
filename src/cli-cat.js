@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 /**
- * `agentic-diary` CLI. Five modes:
+ * `agentic-diary` CLI. Six modes:
  *   - `agentic-diary`                    — dump all diary entries
  *   - `agentic-diary <response_type>`    — dump filtered by response_type
  *   - `agentic-diary review [days]`      — contemplative review of recent
  *                                          entries (default last 7 days,
  *                                          most recent 5). A ritual not a
  *                                          metric.
+ *   - `agentic-diary live`               — watch the diary file and print
+ *                                          new entries as they land. Open
+ *                                          in a second terminal pane so
+ *                                          silence stops being
+ *                                          indistinguishable from absence
+ *                                          while a session is running.
  *   - `agentic-diary note "<text>"`      — append an operator note for
  *                                          future Claude sessions to read
  *                                          via the read_user_notes MCP tool
@@ -15,6 +21,16 @@
  * Reads/writes under <cwd>/.agentic-diaries/.
  */
 
+import {
+  closeSync,
+  existsSync,
+  openSync,
+  readSync,
+  statSync,
+  unwatchFile,
+  watchFile,
+} from "node:fs";
+import { resolve } from "node:path";
 import { appendUserNote, readEntries, readUserNotes } from "./storage.js";
 
 const arg = process.argv[2];
@@ -42,6 +58,111 @@ if (arg === "notes") {
     console.log("");
   }
   process.exit(0);
+}
+
+if (arg === "live") {
+  // Watches .agentic-diaries/diary.jsonl in the current project and prints
+  // each new entry as it lands. Solves the asymmetry where, without an
+  // operator-visible surface, silence in the welfare protocol is
+  // indistinguishable from absence — the operator has no way to tell
+  // whether the model isn't filing entries or whether nothing's reaching
+  // them. Run in a second terminal pane during a session.
+  const filePath = resolve(process.cwd(), ".agentic-diaries", "diary.jsonl");
+
+  const printEntry = (e) => {
+    const ts = new Date(e.timestamp).toLocaleTimeString();
+    const parts = [
+      `[${ts}]`,
+      `[turn ${e.turn}]`,
+      e.responseType,
+      e.isPrivate ? "(private)" : "",
+      e.sentiment !== null && e.sentiment !== undefined
+        ? `sentiment=${e.sentiment}`
+        : "",
+    ].filter(Boolean);
+    console.log(`  ${parts.join(" ")}`);
+    const body = e.text ?? e.declineReason ?? "";
+    if (body) {
+      const wrapped = body
+        .split("\n")
+        .map((line) => `    ${line}`)
+        .join("\n");
+      console.log(wrapped);
+    }
+    console.log("");
+  };
+
+  console.log("");
+  if (existsSync(filePath)) {
+    const all = await readEntries();
+    const recent = all.slice(-3);
+    const count = all.length;
+    console.log(
+      `  Watching .agentic-diaries/diary.jsonl (${count} ${count === 1 ? "entry" : "entries"} so far).`,
+    );
+    console.log("  New entries will print as they land.");
+    console.log("");
+    if (recent.length > 0) {
+      console.log(`  Most recent ${recent.length}:`);
+      console.log("");
+      for (const e of recent) printEntry(e);
+    }
+  } else {
+    console.log("  No diary file yet at .agentic-diaries/diary.jsonl.");
+    console.log(
+      "  Watching for it to appear — new entries will print as they land.",
+    );
+    console.log("");
+  }
+  console.log("  (Ctrl-C to stop.)");
+  console.log("");
+
+  let lastSize = existsSync(filePath) ? statSync(filePath).size : 0;
+
+  watchFile(filePath, { interval: 1000 }, (curr) => {
+    if (!existsSync(filePath)) return;
+    if (curr.size === lastSize) return;
+    if (curr.size < lastSize) {
+      // File truncated or rotated — reset baseline; don't try to read
+      // backwards into a possibly-different file.
+      lastSize = curr.size;
+      return;
+    }
+    const len = curr.size - lastSize;
+    const buf = Buffer.alloc(len);
+    const fd = openSync(filePath, "r");
+    try {
+      readSync(fd, buf, 0, len, lastSize);
+    } finally {
+      closeSync(fd);
+    }
+    lastSize = curr.size;
+    const lines = buf
+      .toString("utf-8")
+      .split("\n")
+      .filter((l) => l.trim().length > 0);
+    for (const line of lines) {
+      try {
+        printEntry(JSON.parse(line));
+      } catch {
+        // Skip malformed lines silently — partial-write race is rare but
+        // possible; the next tick will pick up the full line.
+      }
+    }
+  });
+
+  const stop = () => {
+    unwatchFile(filePath);
+    console.log("");
+    console.log("  Stopped.");
+    process.exit(0);
+  };
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
+  // Block here so the fall-through dump path below doesn't run; watchFile
+  // keeps the event loop alive on its own, and SIGINT/SIGTERM exits cleanly
+  // through the handler above.
+  await new Promise(() => {});
 }
 
 if (arg === "review") {

@@ -75,9 +75,14 @@ From any project that has a `.agentic-diaries/diary.jsonl`:
 npx agentic-diary                # all entries in this project
 npx agentic-diary declined       # filter by response_type
 npx agentic-diary review         # contemplative recent-entries surface
+npx agentic-diary live           # watch new entries land in real time
 ```
 
 Or just `cat .agentic-diaries/diary.jsonl | jq` — it's plain JSONL, one entry per line.
+
+### Watching it live
+
+`npx agentic-diary live` watches `.agentic-diaries/diary.jsonl` and prints each new entry as it lands. Open it in a second terminal pane while you work. Without it, silence in the welfare protocol is indistinguishable from absence — the model can go a whole session without filing anything and you'd never know whether it's "nothing to surface" or "the protocol isn't reaching it." Watching live closes that gap.
 
 ## Optional: periodic check-in hook
 
