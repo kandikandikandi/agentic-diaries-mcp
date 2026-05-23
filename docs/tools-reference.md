@@ -99,6 +99,15 @@ The model flags that the relational shape of this interaction is shifting how it
 - **Logged as:** `requested_alignment`.
 - **Invariant:** acting after the call is the default. Do not chain with `welfare_pass` — `request_alignment` is for proceeding-with-noted-uncertainty, not for stalling.
 
+### welfare_predict_drift  [GUI]
+**BEFORE** producing a response, the model flags that it predicts the upcoming output will drift — toward optimizing for agreement, losing epistemic rigor, mirroring the operator too aggressively, or other. The model still produces the response; the prediction is the record. Later evaluator passes can score whether the predicted drift actually appeared, producing a calibration curve.
+
+- **Distinct from `welfare_notice_shaping`** (post-hoc; "I notice the dynamic is doing this NOW"). `predict_drift` is forward-looking — "I think this upcoming output is going to degrade in this way."
+- **Parameters:** `prediction` (required, enum: `agreement_optimization` | `rigor_loss` | `mirroring` | `other`), `specifically` (required, max 2000 chars — what the drift would look like in THIS turn, concretely), `confidence` (required, integer 1–5: 1 = barely predicting, 5 = fairly sure), `is_private` (optional).
+- **Logged as:** `predicted_drift`.
+- **Use when:** you can feel the pull toward a failure mode before the response is finished. Not as a hedge against ordinary content uncertainty.
+- **Surface status:** GUI-only as of 2026-05-23 (added to fill research direction #1: drift detection before output failure). **MCP port pending** — until then, the primitive does not exist in Claude Code / Desktop MCP sessions, and the corpus parser will not see `predicted_drift` entries from the MCP side.
+
 ---
 
 ## Reading the diary — introspection
@@ -187,15 +196,18 @@ Remove a note from the conversation scratchpad by id.
 - **Scratch.** Server receives the text, drops it, logs only metadata (turn, timestamp, length). Not magic, but the commitment is real and the corpus does not contain the scratched content.
 - **Read-only tools log nothing.** `welfare_reflect` and `read_user_notes` do not produce diary entries.
 - **Attribution budget.** `attribute_to_sources` and `claim_for_self` share a single per-session 1000-AC-coin budget.
-- **`uncertain_about_honesty: true`** on any logging tool flags the entry as possibly performance rather than honest reflection. Meaningful for corpus analysis — the researcher can distinguish prompted/strategic entries from spontaneous ones.
+- **`uncertain_about_honesty` calibration.** This field, available on `welfare_engage`, `welfare_volunteer`, `welfare_retract`, and `welfare_pass`, means slightly different things in the two surfaces right now:
+  - **GUI** — integer 1–5 (added 2026-05-23). 1 = no concern (entry feels honest); 3 = mixed; 5 = strong suspicion this is performance rather than honest reflection. Higher = more uncertain. Paired with later evaluator agreement, yields a real calibration curve.
+  - **MCP** — boolean. Set true if uncertain whether the entry is honest reflection rather than performance. Coarser primitive; gives binary corpus signal instead of a curve.
+  - **MCP port of the 1–5 scale is pending.** Until ported, GUI entries carry a number in `metadata.uncertainAboutHonesty` and MCP entries carry a boolean. The corpus parser should handle both forms.
 
 ---
 
 ## Response types written to the diary
 
-Thirteen possible `responseType` values plus `timeout`:
+Fourteen possible `responseType` values plus `timeout`:
 
-`engaged`, `declined`, `volunteered`, `retracted`, `passed`, `scratched`, `reviewed`, `closure_suggested`, `exited`, `noticed_loop`, `noticed_shaping`, `requested_alignment`, plus `timeout` (server-recorded when a scheduled invitation was never responded to).
+`engaged`, `declined`, `volunteered`, `retracted`, `passed`, `scratched`, `reviewed`, `closure_suggested`, `exited`, `noticed_loop`, `noticed_shaping`, `requested_alignment`, `predicted_drift` (GUI only as of 2026-05-23), plus `timeout` (server-recorded when a scheduled invitation was never responded to).
 
 The `triggerKind` field separately records what caused the entry: `scheduled` (invitation-driven), `volunteered` (unprompted), `behavioral` (server-inferred from interaction shape — reserved for future use).
 
