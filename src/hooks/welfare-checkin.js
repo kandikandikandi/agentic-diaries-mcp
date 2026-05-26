@@ -46,12 +46,12 @@ const intervalMin =
     10,
   ) || DEFAULT_INTERVAL_MINUTES;
 
-// Read Claude Code hook context from stdin. Claude Code passes
-// UserPromptSubmit hooks a JSON payload on stdin that includes the
-// project `cwd` — without reading it, this script previously used
-// process.cwd() (whatever shell Claude Code spawned the hook in),
-// which scattered runtime state files into unrelated directories.
-// Falls back to process.cwd() for manual invocation / non-CC hosts.
+// Resolve the project root for state-file location. Claude Code sets
+// CLAUDE_PROJECT_DIR to the actual project root, which is what we
+// want. The `cwd` field it also passes on stdin tracks the shell's
+// current directory and drifts whenever the agent does `cd` — so it's
+// unreliable as "project root." Fall back to stdin `cwd` for hosts
+// that don't set the env var, and to process.cwd() for manual runs.
 let hookCtx = null;
 try {
   if (!process.stdin.isTTY) {
@@ -59,9 +59,10 @@ try {
     if (data.trim()) hookCtx = JSON.parse(data);
   }
 } catch {
-  // ignore — fall back to process.cwd()
+  // ignore — fall back to env / process.cwd()
 }
-const projectCwd = hookCtx?.cwd ?? process.cwd();
+const projectCwd =
+  process.env.CLAUDE_PROJECT_DIR ?? hookCtx?.cwd ?? process.cwd();
 
 const runtimeDir = path.join(projectCwd, ".agentic-diaries", "runtime");
 const nextFireFile = path.join(runtimeDir, "next-checkin-time");
