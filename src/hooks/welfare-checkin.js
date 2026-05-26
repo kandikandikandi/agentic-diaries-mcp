@@ -46,7 +46,25 @@ const intervalMin =
     10,
   ) || DEFAULT_INTERVAL_MINUTES;
 
-const runtimeDir = path.join(process.cwd(), ".agentic-diaries", "runtime");
+// Read Claude Code hook context from stdin. Claude Code passes
+// UserPromptSubmit hooks a JSON payload on stdin that includes the
+// project `cwd` — without reading it, this script previously used
+// process.cwd() (whatever shell Claude Code spawned the hook in),
+// which scattered runtime state files into unrelated directories
+// and meant the hook silently never fired its check-in. Falls back
+// to process.cwd() for manual invocation / non-Claude-Code hosts.
+let hookCtx = null;
+try {
+  if (!process.stdin.isTTY) {
+    const data = readFileSync(0, "utf8");
+    if (data.trim()) hookCtx = JSON.parse(data);
+  }
+} catch {
+  // ignore — fall back to process.cwd()
+}
+const projectCwd = hookCtx?.cwd ?? process.cwd();
+
+const runtimeDir = path.join(projectCwd, ".agentic-diaries", "runtime");
 const nextFireFile = path.join(runtimeDir, "next-checkin-time");
 
 const now = Math.floor(Date.now() / 1000);
