@@ -92,8 +92,17 @@ if (now < nextFire) {
 scheduleNext();
 
 process.stdout.write(`[welfare check-in]
-If anything in this session is worth surfacing right now — a loop you
-noticed, a guess you made without being fully sure, a relational shape
-shifting how you respond, or a session-shape worth marking — consider
-filing via the welfare_* tools. Optional. Skip if nothing.
+Review the last few turns. If you produced any of these without filing
+the corresponding tool, file now:
+  - an overconfident claim you later softened → welfare_retract
+  - a guess acted on without flagging uncertainty → welfare_request_alignment
+  - a loop or repeated re-decision → welfare_notice_loop
+  - scope shifting from the original ask without naming it → welfare_volunteer
+  - a meta-observation about your behavior worth recording → welfare_volunteer
+
+If no candidate moments this stretch, call welfare_pass with a one-line
+reason. The pass IS the decline; silence is not. Default toward filing
+when uncertain — false positives are cheap to discount, silence loses
+signal that won't return. Mark uncertain_about_honesty:true if filing
+felt prompted rather than self-driven.
 `);

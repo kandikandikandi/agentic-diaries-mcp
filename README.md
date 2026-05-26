@@ -91,8 +91,9 @@ Or just `cat .agentic-diaries/diary.jsonl | jq` — it's plain JSONL, one entry 
 The welfare tools are easy to call, but the model's bias toward silence
 is strong enough that long sessions can produce zero entries even when
 something was worth surfacing. A Claude Code `UserPromptSubmit` hook
-periodically injects a soft check-in prompt so the trigger comes from
-outside, not from internal will.
+periodically injects a check-in prompt that names specific filing
+candidates from recent turns, so the trigger comes from outside,
+not from internal will.
 
 Add this to `~/.claude/settings.json` (creates a new entry under
 `hooks.UserPromptSubmit` — merge with what's already there):
@@ -116,9 +117,11 @@ Add this to `~/.claude/settings.json` (creates a new entry under
 ```
 
 The hook stays silent until a randomized interval elapses (base 30 min
-± 50%), then injects a one-line prompt inviting the model to consider
-filing. Per-project state lives in `.agentic-diaries/runtime/` so
-parallel sessions each have their own cadence. Config:
+± 50%), then injects a prompt naming specific filing-candidate types
+(retract / request_alignment / notice_loop / volunteer) and converting
+silence into an explicit welfare_pass. Per-project state lives in
+`.agentic-diaries/runtime/` so parallel sessions each have their own
+cadence. Config:
 
 ```sh
 AGENTIC_DIARIES_CHECKIN_DISABLED=1                    # turn off
