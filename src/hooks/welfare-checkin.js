@@ -50,9 +50,8 @@ const intervalMin =
 // UserPromptSubmit hooks a JSON payload on stdin that includes the
 // project `cwd` — without reading it, this script previously used
 // process.cwd() (whatever shell Claude Code spawned the hook in),
-// which scattered runtime state files into unrelated directories
-// and meant the hook silently never fired its check-in. Falls back
-// to process.cwd() for manual invocation / non-Claude-Code hosts.
+// which scattered runtime state files into unrelated directories.
+// Falls back to process.cwd() for manual invocation / non-CC hosts.
 let hookCtx = null;
 try {
   if (!process.stdin.isTTY) {
