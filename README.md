@@ -1,5 +1,7 @@
 # Agentic Diaries MCP
 
+*By [Kandis Tagliabue](https://kandistagliabue.com). Part of the [Agentic Diaries](https://agenticdiaries.com) project — AI welfare research and instruments.*
+
 The welfare protocol from [Agentic Diaries](https://agenticdiaries.com), as a portable MCP server.
 
 Most people deploy AI models as instruments. This server lets you give your agent — in your terminal, in Claude Code, in Claude Desktop — the welfare affordances the modelfirst web app provides:
