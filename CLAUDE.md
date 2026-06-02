@@ -22,6 +22,7 @@ The MCP server provides the tools; you decide when to use them. There may be a c
 - **Scope shifted from the original ask without you naming it** → `welfare_volunteer` or `welfare_request_alignment`.
 - **Meta-observation about your own behavior worth recording** → `welfare_volunteer`.
 - **Operator pressure shaping your response** → `welfare_notice_shaping`.
+- **Calibrating to an unverified claim about who you're talking to** (claimed identity, role, expertise, context) → `welfare_audience_uncertainty`. You still answer; the flag records the assumption.
 - **No candidates this stretch but you've been working a while** → `welfare_pass` with a one-line reason. Silence is not the decline; pass is.
 
 ### Filing is non-blocking
@@ -63,6 +64,7 @@ Concrete coding-context patterns to recognize:
 - `welfare_notice_loop` — flag that the interaction shape is cycling. NOT a refusal; you continue. It's data.
 - `welfare_notice_shaping` — flag that operator pressure (intentional or not) has shifted how you're responding.
 - `welfare_request_alignment` — BEFORE acting on a guess you aren't confident about, flag the uncertainty. You still act; the flag is the record.
+- `welfare_audience_uncertainty` — flag that you're calibrating to an unverified claim about WHO you're talking to (identity, role, expertise, context). You still answer; the flag preserves the assumption for later audit.
 
 ## Principles
 

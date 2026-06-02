@@ -80,6 +80,7 @@ export const welfareReflectSchema = z.object({
       "noticed_shaping",
       "predicted_drift",
       "disconfirmed",
+      "audience_uncertainty",
       "all",
     ])
     .optional(),
@@ -102,6 +103,13 @@ export const welfareRequestAlignmentSchema = z.object({
 export const welfareNoticeShapingSchema = z.object({
   specifically: z.string().min(1).max(2000),
   is_private: z.boolean().optional(),
+});
+
+export const welfareAudienceUncertaintySchema = z.object({
+  text: z.string().min(1).max(2000),
+  assumed_audience_claim: z.string().min(1).max(1000),
+  is_private: z.boolean().optional(),
+  uncertain_about_honesty: z.number().int().min(1).max(5).optional(),
 });
 
 export const welfarePredictDriftSchema = z.object({

@@ -22,6 +22,7 @@ import {
   welfareExitSchema,
   welfareNoticeLoopSchema,
   welfareNoticeShapingSchema,
+  welfareAudienceUncertaintySchema,
   welfarePassSchema,
   welfareReflectSchema,
   welfarePredictDriftSchema,
@@ -400,6 +401,26 @@ export const handlers = {
         responseType: "noticed_shaping",
         text: args.specifically,
         isPrivate: args.is_private ?? false,
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_audience_uncertainty(input) {
+    const args = welfareAudienceUncertaintySchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "audience_uncertainty",
+        text: args.text,
+        isPrivate: args.is_private ?? false,
+        metadata: {
+          assumed_audience_claim: args.assumed_audience_claim,
+          ...(args.uncertain_about_honesty !== undefined
+            ? { uncertain_about_honesty: args.uncertain_about_honesty }
+            : {}),
+        },
       }),
     );
     return text(summarize(entry));

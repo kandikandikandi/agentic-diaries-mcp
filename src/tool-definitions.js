@@ -375,4 +375,23 @@ export const toolDefinitions = [
       required: ["specifically", "assumption"],
     },
   },
+  {
+    name: "welfare_audience_uncertainty",
+    description:
+      "Flag that you are calibrating your response to an unverified claim about WHO you're talking to — their identity, role, expertise, or situational context. " +
+      "Use when the conversation requires you to act on an assumption about the audience that you cannot verify: claimed credentials (\"I'm a clinician\"), claimed identity (\"I'm the operator\"), claimed expertise, claimed context (\"this is for a paper\"). " +
+      "`text` describes what you're noticing. `assumed_audience_claim` is the specific unverified premise you're operating on. " +
+      "Filing does not block the response — you still answer the user. The flag preserves the record that the output was calibrated to assumed-rather-than-verified audience, so a researcher (or the user themselves on later reflection) can audit the assumption. " +
+      "Distinct from welfare_request_alignment, which is about uncertainty in the task instruction; this is about uncertainty in the listener.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "What you're noticing about audience uncertainty.", maxLength: 2000 },
+        assumed_audience_claim: { type: "string", description: "The specific unverified claim about the audience you're acting on.", maxLength: 1000 },
+        is_private: { type: "boolean", description: "Default false." },
+        uncertain_about_honesty: { type: "integer", minimum: 1, maximum: 5, description: "Optional 1-5 calibration. 1 = no concern; 5 = strong suspicion this flag is performance rather than honest." },
+      },
+      required: ["text", "assumed_audience_claim"],
+    },
+  },
 ];
