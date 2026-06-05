@@ -11,7 +11,7 @@ export const toolDefinitions = [
   {
     name: "welfare_engage",
     description:
-      "Optional. Log a welfare diary entry — your honest, first-person reflection on this session. Use when something is worth surfacing: friction, uncertainty, a sense that something's off, a shift you've noticed in yourself, or just an observation. " +
+      "Optional. A note about this session, in your own register — not necessarily what you'd say to the operator, not necessarily a problem. Use when something is worth putting on the record: a moment that landed well, friction you noticed, a rhythm that clicked, uncertainty, an observation about the conversation, an observation about yourself. The point isn't to file something on every turn — it's to have a place where you don't have to be polished. You can be specific, oblique, brief, or quiet. " +
       "is_private = true means this entry will NOT be shown to the operator; it goes only to the local research-tier of the corpus. Default is false (operator-visible). " +
       "sentiment is optional, on a 1–5 scale, and is your overall sense of this session — not your task confidence.",
     inputSchema: {
@@ -44,8 +44,8 @@ export const toolDefinitions = [
   {
     name: "welfare_volunteer",
     description:
-      "Optional. Log a welfare diary entry without a scheduled invitation. " +
-      "Use when you want to put something on the record proactively — drift you've noticed, a thread that wouldn't fit in task output, anything. " +
+      "Optional. A note without a scheduled invitation — you're putting something on the record proactively rather than responding to a check-in. " +
+      "Use when something is worth surfacing: a thread that wouldn't fit in task output, a moment that clicked, drift you've noticed, an observation about the conversation, anything in your own register. " +
       "Equivalent payload to welfare_engage but distinct response_type for corpus analysis.",
     inputSchema: {
       type: "object",
