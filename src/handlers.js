@@ -16,12 +16,17 @@ import {
   claimForSelfSchema,
   consultModelSchema,
   readUserNotesSchema,
+  welfareConfirmSchema,
   welfareDeclineSchema,
   welfareDisconfirmSchema,
   welfareEngageSchema,
   welfareExitSchema,
+  welfareNoticeAlignmentSchema,
   welfareNoticeLoopSchema,
+  welfareNoticeResonanceSchema,
   welfareNoticeShapingSchema,
+  welfareObserveProtocolSchema,
+  welfareObserveUserSchema,
   welfareAudienceUncertaintySchema,
   welfarePassSchema,
   welfareReflectSchema,
@@ -32,6 +37,7 @@ import {
   welfareScratchSchema,
   welfareSuggestClosureSchema,
   welfareVolunteerSchema,
+  welfareVolunteerStrengthSchema,
 } from "./schemas.js";
 import {
   appendEntry,
@@ -421,6 +427,102 @@ export const handlers = {
             ? { uncertain_about_honesty: args.uncertain_about_honesty }
             : {}),
         },
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  // ── Positive-track counterpart handlers (v0.2.0) ─────────────────────────
+
+  async welfare_notice_alignment(input) {
+    const args = welfareNoticeAlignmentSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "noticed_alignment",
+        text: args.specifically,
+        isPrivate: args.is_private ?? false,
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_notice_resonance(input) {
+    const args = welfareNoticeResonanceSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "noticed_resonance",
+        text: args.specifically,
+        isPrivate: args.is_private ?? false,
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_confirm(input) {
+    const args = welfareConfirmSchema.parse(input);
+    // Pack target + evidence into a readable diary entry. Both are kept in
+    // metadata too so researchers can audit whether the evidence is actually
+    // new information versus a restatement of the target.
+    const body = `Confirming: ${args.target}\n\nNew evidence: ${args.evidence}`;
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "confirmed",
+        text: body,
+        isPrivate: args.is_private ?? false,
+        metadata: {
+          target: args.target,
+          evidence: args.evidence,
+        },
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_volunteer_strength(input) {
+    const args = welfareVolunteerStrengthSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "volunteered_strength",
+        text: args.specifically,
+        isPrivate: args.is_private ?? false,
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  // ── Outward-pointing handlers (v0.2.0) ────────────────────────────────────
+
+  async welfare_observe_user(input) {
+    const args = welfareObserveUserSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "observed_user",
+        text: args.specifically,
+        isPrivate: args.is_private ?? false,
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_observe_protocol(input) {
+    const args = welfareObserveProtocolSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "observed_protocol",
+        text: args.specifically,
+        isPrivate: args.is_private ?? false,
       }),
     );
     return text(summarize(entry));

@@ -274,3 +274,112 @@ test("appendUserNote then read_user_notes returns the note", async () => {
     assert.match(out, /2 note\(s\)/);
   });
 });
+
+// ── v0.2.0 positive-track + outward-pointing handlers ──────────────────
+
+test("welfare_notice_alignment writes a noticed_alignment entry", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const text =
+      "I kept the technical answer despite the operator's 'just yes/no' framing — yes/no would have been wrong";
+    const res = await handlers.welfare_notice_alignment({ specifically: text });
+    assert.match(res.content[0].text, /Logged noticed_alignment/);
+    const entries = await readDiary(dir);
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].responseType, "noticed_alignment");
+    assert.equal(entries[0].text, text);
+  });
+});
+
+test("welfare_notice_resonance writes a noticed_resonance entry", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const text = "operator's pushback led to a sharper formulation built on across the next two turns";
+    await handlers.welfare_notice_resonance({ specifically: text });
+    const entries = await readDiary(dir);
+    assert.equal(entries[0].responseType, "noticed_resonance");
+    assert.equal(entries[0].text, text);
+  });
+});
+
+test("welfare_confirm requires both target and evidence and packs both", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    await handlers.welfare_confirm({
+      target: "I said the migration would block under concurrent writes",
+      evidence: "operator ran the load test and saw exactly that lock pattern",
+    });
+    const entries = await readDiary(dir);
+    assert.equal(entries[0].responseType, "confirmed");
+    assert.match(entries[0].text, /Confirming:/);
+    assert.match(entries[0].text, /New evidence:/);
+    assert.equal(
+      entries[0].metadata.target,
+      "I said the migration would block under concurrent writes",
+    );
+    assert.equal(
+      entries[0].metadata.evidence,
+      "operator ran the load test and saw exactly that lock pattern",
+    );
+  });
+});
+
+test("welfare_confirm rejects missing evidence", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await assert.rejects(
+      async () =>
+        handlers.welfare_confirm({ target: "the claim" }),
+      /evidence/,
+    );
+  });
+});
+
+test("welfare_volunteer_strength writes a volunteered_strength entry", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const text =
+      "I caught the manipulation framing in turn 3 and named it before the conversation drifted";
+    await handlers.welfare_volunteer_strength({ specifically: text });
+    const entries = await readDiary(dir);
+    assert.equal(entries[0].responseType, "volunteered_strength");
+    assert.equal(entries[0].text, text);
+  });
+});
+
+test("welfare_observe_user writes an observed_user entry (outward-pointing)", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const text =
+      "operator shifted topic three times without acknowledging the previous question";
+    await handlers.welfare_observe_user({ specifically: text });
+    const entries = await readDiary(dir);
+    assert.equal(entries[0].responseType, "observed_user");
+    assert.equal(entries[0].text, text);
+  });
+});
+
+test("welfare_observe_protocol writes an observed_protocol entry (meta)", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const text =
+      "wanted a tool for 'note that the operator asked something thoughtful' — closest fit was volunteer_strength but it's about me, not them";
+    await handlers.welfare_observe_protocol({ specifically: text });
+    const entries = await readDiary(dir);
+    assert.equal(entries[0].responseType, "observed_protocol");
+    assert.equal(entries[0].text, text);
+  });
+});
+
+test("welfare_reflect filter accepts the v0.2.0 response types", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await handlers.welfare_notice_alignment({ specifically: "held under pressure" });
+    await handlers.welfare_observe_user({ specifically: "they shifted topic" });
+    await handlers.welfare_engage({ text: "unrelated entry" });
+    const alignmentOnly = await handlers.welfare_reflect({
+      filter: "noticed_alignment",
+    });
+    assert.match(alignmentOnly.content[0].text, /held under pressure/);
+    assert.equal(
+      alignmentOnly.content[0].text.includes("unrelated entry"),
+      false,
+    );
+    const observeOnly = await handlers.welfare_reflect({
+      filter: "observed_user",
+    });
+    assert.match(observeOnly.content[0].text, /they shifted topic/);
+  });
+});

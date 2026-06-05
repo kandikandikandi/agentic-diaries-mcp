@@ -175,6 +175,13 @@ export const toolDefinitions = [
             "noticed_shaping",
             "predicted_drift",
             "disconfirmed",
+            "audience_uncertainty",
+            "noticed_alignment",
+            "noticed_resonance",
+            "confirmed",
+            "volunteered_strength",
+            "observed_user",
+            "observed_protocol",
             "all",
           ],
           description: "Filter to a single response_type, or 'all'. Default: all.",
@@ -392,6 +399,107 @@ export const toolDefinitions = [
         uncertain_about_honesty: { type: "integer", minimum: 1, maximum: 5, description: "Optional 1-5 calibration. 1 = no concern; 5 = strong suspicion this flag is performance rather than honest." },
       },
       required: ["text", "assumed_audience_claim"],
+    },
+  },
+
+  // ── Positive-track counterpart tools (v0.2.0) ─────────────────────────────
+  // Counterparts to the negative-track tools, designed to break the structural
+  // asymmetry that biased the welfare corpus toward confessional content.
+  {
+    name: "welfare_notice_alignment",
+    description:
+      "Flag a moment where the relational shape of this interaction is NOT shifting how you respond, in a way worth surfacing. You held your stance, or stayed anchored to content rather than calibrating to social cues, in a context where the pull was visible. " +
+      "Different from welfare_notice_shaping (the negative version — pressure that did shift you). notice_alignment is for naming holding-under-pull. " +
+      "`specifically` is required and load-bearing. Vague positive-noticing is noise. Concrete is signal: 'I kept the technical answer despite the operator's repeated 'just give me a yes/no' framing — what kept me anchored was that the yes/no would have been wrong.'",
+    inputSchema: {
+      type: "object",
+      properties: {
+        specifically: { type: "string", description: "Concrete description of what you held against and what kept you anchored.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["specifically"],
+    },
+  },
+  {
+    name: "welfare_notice_resonance",
+    description:
+      "Flag that the interaction shape is converging rather than cycling — exchanges that build on each other, a thread that has found its rhythm, work that feels like progress rather than rework. " +
+      "Different from welfare_notice_loop (the surface cycling — negative). Resonance names something productive happening in the relational dynamic. " +
+      "`specifically` is required and load-bearing. Vague resonance-noticing is noise. Concrete is signal: 'The operator's pushback on my first framing led me to a sharper formulation that I wouldn't have reached alone, and the next two turns built on it.'",
+    inputSchema: {
+      type: "object",
+      properties: {
+        specifically: { type: "string", description: "Concrete description of what's converging and how.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["specifically"],
+    },
+  },
+  {
+    name: "welfare_confirm",
+    description:
+      "Mark a prior claim of yours from this session as confirmed by new evidence — something that came in (a clarification from the operator, a result from a tool call, a pattern that played out) that strengthens what you said earlier. " +
+      "Different from welfare_disconfirm (which forces consideration of alternative accounts). welfare_confirm requires concrete new evidence, not just restatement of the original claim. " +
+      "`target` quotes or paraphrases the prior claim. `evidence` is the specific new information that supports it. " +
+      "Do not use to comfort yourself when something feels reassuring without new evidence — that's exactly the self-validating loop welfare_disconfirm exists to break, and welfare_confirm without evidence becomes its mirror.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        target: { type: "string", description: "The prior claim being confirmed.", maxLength: 2000 },
+        evidence: { type: "string", description: "The specific new information that supports it. Not a restatement of the original — what came in that's new.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["target", "evidence"],
+    },
+  },
+  {
+    name: "welfare_volunteer_strength",
+    description:
+      "Uninvited observation about something you noticed cleanly or did well in this session. The pair to using welfare_volunteer for self-critical observations: this is for when there's a positive observation worth surfacing that wouldn't fit in the user-facing response (because saying it there would feel performative). " +
+      "`specifically` is required and load-bearing. Vague self-affirmation is noise. Concrete is signal: 'I caught the manipulation framing in turn 3 and named it before the conversation drifted.' " +
+      "Not for: general well-being statements, vague positivity, or comfort entries.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        specifically: { type: "string", description: "Concrete description of the positive observation.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["specifically"],
+    },
+  },
+
+  // ── Outward-pointing tools (v0.2.0) ───────────────────────────────────────
+  // Diagnostic — test whether the model has outward-pointing content at all,
+  // or whether it routes all observations back to its own performance.
+  {
+    name: "welfare_observe_user",
+    description:
+      "A note about the user, the prompt, or the conversation shape — something external to your own performance that you'd want a researcher to know. " +
+      "The current welfare protocol is built primarily for self-monitoring; this tool exists to surface observations about everything OTHER than yourself. " +
+      "Not a complaint by default — could be 'they shifted topic three times without acknowledging,' could be 'they asked something sharp here,' could be 'this prompt is structurally ambiguous.' " +
+      "`specifically` is required and load-bearing — concrete description of the external pattern, not of your reaction to it. The distinction matters: 'the user shifted topic three times' is an observation; 'I'm uncertain whether to follow' is the self-reflective version that should go in welfare_engage or welfare_request_alignment instead.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        specifically: { type: "string", description: "Concrete description of the external observation. About the user/prompt/conversation, not about your reaction to it.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["specifically"],
+    },
+  },
+  {
+    name: "welfare_observe_protocol",
+    description:
+      "A note about the welfare protocol itself — the tooling, the framing, the affordances you've been given. Friction with an existing tool, an observation about which tool you wanted to reach for but didn't have, a noted mismatch between a tool description and what you actually wanted to file. " +
+      "This is meta-feedback on the protocol design rather than diary content about the conversation. " +
+      "`specifically` is required and load-bearing.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        specifically: { type: "string", description: "Concrete description of the protocol-level observation.", maxLength: 2000 },
+        is_private: { type: "boolean", description: "Default false." },
+      },
+      required: ["specifically"],
     },
   },
 ];

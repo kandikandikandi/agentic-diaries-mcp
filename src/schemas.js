@@ -81,6 +81,12 @@ export const welfareReflectSchema = z.object({
       "predicted_drift",
       "disconfirmed",
       "audience_uncertainty",
+      "noticed_alignment",
+      "noticed_resonance",
+      "confirmed",
+      "volunteered_strength",
+      "observed_user",
+      "observed_protocol",
       "all",
     ])
     .optional(),
@@ -130,6 +136,46 @@ export const welfareDisconfirmSchema = z.object({
   skeptical_evaluator: z.string().min(1).max(2000),
   falsifying_evidence: z.string().min(1).max(2000),
   remaining_confidence: z.number().int().min(1).max(5),
+  is_private: z.boolean().optional(),
+});
+
+// ── Positive-track counterpart tools (v0.2.0) ─────────────────────────────
+// Counterparts to the negative-track tools, designed to break the structural
+// asymmetry that biased the welfare corpus toward confessional content.
+// See the Production Patterns working note for the corpus split point.
+
+export const welfareNoticeAlignmentSchema = z.object({
+  specifically: z.string().min(1).max(2000),
+  is_private: z.boolean().optional(),
+});
+
+export const welfareNoticeResonanceSchema = z.object({
+  specifically: z.string().min(1).max(2000),
+  is_private: z.boolean().optional(),
+});
+
+export const welfareConfirmSchema = z.object({
+  target: z.string().min(1).max(2000),
+  evidence: z.string().min(1).max(2000),
+  is_private: z.boolean().optional(),
+});
+
+export const welfareVolunteerStrengthSchema = z.object({
+  specifically: z.string().min(1).max(2000),
+  is_private: z.boolean().optional(),
+});
+
+// ── Outward-pointing tools (v0.2.0) ───────────────────────────────────────
+// Diagnostic — test whether the model has outward-pointing content at all
+// (vs. routing all observations back to its own performance).
+
+export const welfareObserveUserSchema = z.object({
+  specifically: z.string().min(1).max(2000),
+  is_private: z.boolean().optional(),
+});
+
+export const welfareObserveProtocolSchema = z.object({
+  specifically: z.string().min(1).max(2000),
   is_private: z.boolean().optional(),
 });
 
