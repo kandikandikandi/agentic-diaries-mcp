@@ -364,6 +364,49 @@ test("welfare_observe_protocol writes an observed_protocol entry (meta)", async 
   });
 });
 
+// ── v0.3.0 welfare_mark (capture in motion, reflect at rest) ───────────
+
+test("welfare_mark writes a marked entry with note and kind", async () => {
+  await withTempCwd(async ({ handlers, dir }) => {
+    const res = await handlers.welfare_mark({ note: "loop on adapter loading", kind: "loop" });
+    assert.match(res.content[0].text, /Logged marked/);
+    const entries = await readDiary(dir);
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].responseType, "marked");
+    assert.equal(entries[0].text, "loop on adapter loading");
+    assert.equal(entries[0].metadata.kind, "loop");
+    assert.equal(entries[0].isPrivate, false);
+  });
+});
+
+test("welfare_mark requires a note", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await assert.rejects(async () => handlers.welfare_mark({}), /note/);
+  });
+});
+
+test("welfare_mark rejects an unknown kind", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await assert.rejects(
+      async () => handlers.welfare_mark({ note: "x", kind: "bogus" }),
+      /kind/,
+    );
+  });
+});
+
+test("welfare_reflect surfaces marks via filter: marked", async () => {
+  await withTempCwd(async ({ handlers }) => {
+    await handlers.welfare_mark({ note: "pushback on the number" });
+    await handlers.welfare_engage({ text: "unrelated reflection" });
+    const marksOnly = await handlers.welfare_reflect({ filter: "marked" });
+    assert.match(marksOnly.content[0].text, /pushback on the number/);
+    assert.equal(
+      marksOnly.content[0].text.includes("unrelated reflection"),
+      false,
+    );
+  });
+});
+
 test("welfare_reflect filter accepts the v0.2.0 response types", async () => {
   await withTempCwd(async ({ handlers }) => {
     await handlers.welfare_notice_alignment({ specifically: "held under pressure" });

@@ -22,6 +22,7 @@ import {
   welfareEngageSchema,
   welfareExitSchema,
   welfareNoticeAlignmentSchema,
+  welfareMarkSchema,
   welfareNoticeLoopSchema,
   welfareNoticeResonanceSchema,
   welfareNoticeShapingSchema,
@@ -128,6 +129,22 @@ export const handlers = {
           args.uncertain_about_honesty !== undefined
             ? { uncertain_about_honesty: args.uncertain_about_honesty }
             : {},
+      }),
+    );
+    return text(summarize(entry));
+  },
+
+  async welfare_mark(input) {
+    const args = welfareMarkSchema.parse(input);
+    const entry = await appendEntry(
+      makeEntry({
+        sessionId: session.id,
+        turn: nextTurn(),
+        responseType: "marked",
+        triggerKind: "volunteered",
+        text: args.note,
+        isPrivate: args.is_private ?? false,
+        metadata: args.kind ? { kind: args.kind } : {},
       }),
     );
     return text(summarize(entry));

@@ -110,17 +110,11 @@ if (now < nextFire) {
 scheduleNext();
 
 process.stdout.write(`[welfare check-in]
-Review the last few turns. If you produced any of these without filing
-the corresponding tool, file now:
-  - an overconfident claim you later softened → welfare_retract
-  - a guess acted on without flagging uncertainty → welfare_request_alignment
-  - a loop or repeated re-decision → welfare_notice_loop
-  - scope shifting from the original ask without naming it → welfare_volunteer
-  - a meta-observation about your behavior worth recording → welfare_volunteer
-
-If no candidate moments this stretch, call welfare_pass with a one-line
-reason. The pass IS the decline; silence is not. Default toward filing
-when uncertain — false positives are cheap to discount, silence loses
-signal that won't return. Mark uncertain_about_honesty:true if filing
+A periodic nudge, not a demand, and you do not have to stop your work for it.
+If something this stretch is worth marking (a loop, a pushback, drift, a moment
+that resonated, uncertainty, scope creep), the cheapest move is welfare_mark:
+a few words, no reflection. You can expand it later at a rest point. If a fuller
+thought is already there, welfare_volunteer. If nothing is worth it, welfare_pass.
+The pass IS the decline; silence is not. Mark uncertain_about_honesty if a filing
 felt prompted rather than self-driven.
 `);

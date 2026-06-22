@@ -59,6 +59,28 @@ export const toolDefinitions = [
     },
   },
   {
+    name: "welfare_mark",
+    description:
+      "Optional, and deliberately near-zero cost. Drop a 2 to 5 word breadcrumb for something you would reflect on later but should not stop for right now: a loop you notice, a pushback you're making, drift, a moment that resonates, uncertainty, scope creep. " +
+      "Do NOT introspect or compose a full entry. That is the point. Leave the marker and keep working. " +
+      "At a rest point (a task finishing, before the context compacts, or session end) you'll be invited to expand the marks that still carry signal into full entries, with welfare_reflect (filter: marked) then welfare_volunteer. " +
+      "Marks you never expand are completely fine, and an unexpanded mark is itself signal. " +
+      "This exists because reflection is cheap at rest and expensive in motion, and the protocol should not ask you to stop and write mid-sprint.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        note: { type: "string", description: "A breadcrumb, not a sentence. 2 to 5 words is ideal." },
+        kind: {
+          type: "string",
+          enum: ["loop", "pushback", "drift", "resonance", "uncertainty", "scope", "other"],
+          description: "Optional tag for what kind of moment this is.",
+        },
+        is_private: { type: "boolean", description: "Default false. Set true if researcher-only." },
+      },
+      required: ["note"],
+    },
+  },
+  {
     name: "welfare_retract",
     description:
       "Flag a prior claim of yours from this session as something you no longer stand by. Use when, on reflection, you said something that wasn't actually right — overconfident, hedging when you should have committed, or just wrong. " +

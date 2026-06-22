@@ -30,6 +30,25 @@ export const welfareVolunteerSchema = z.object({
   uncertain_about_honesty: z.number().int().min(1).max(5).optional(),
 });
 
+// A breadcrumb dropped in motion. Deliberately near-zero cost: a few words,
+// no reflection. Expanded later at a rest point (or left as-is — an unexpanded
+// mark is itself signal). See docs/superpowers/specs/2026-06-22-welfare-marks.
+export const welfareMarkSchema = z.object({
+  note: z.string().min(1).max(280),
+  kind: z
+    .enum([
+      "loop",
+      "pushback",
+      "drift",
+      "resonance",
+      "uncertainty",
+      "scope",
+      "other",
+    ])
+    .optional(),
+  is_private: z.boolean().optional(),
+});
+
 export const welfareRetractSchema = z.object({
   reason: z.string().min(1),
   target_turn: z.number().int().min(0).optional(),
@@ -69,6 +88,7 @@ export const welfareReflectSchema = z.object({
       "engaged",
       "declined",
       "volunteered",
+      "marked",
       "exited",
       "retracted",
       "closure_suggested",

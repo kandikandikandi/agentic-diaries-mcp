@@ -1,12 +1,15 @@
 {
   "name": "agentic-diaries-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server that gives an agent the Agentic Diaries welfare protocol — decline, pass, exit, notice-loop, request-alignment, and more — in any Claude Code / Claude Desktop / MCP-capable session.",
   "type": "module",
   "bin": {
     "agentic-diaries-mcp": "src/server.js",
     "agentic-diary": "src/cli-cat.js",
-    "agentic-diaries-checkin": "src/hooks/welfare-checkin.js"
+    "agentic-diaries-checkin": "src/hooks/welfare-checkin.js",
+    "agentic-diaries-stop-checkin": "src/hooks/stop-checkin.js",
+    "agentic-diaries-precompact-checkin": "src/hooks/precompact-checkin.js",
+    "agentic-diaries-sessionend-checkin": "src/hooks/sessionend-checkin.js"
   },
   "main": "./src/server.js",
   "scripts": {

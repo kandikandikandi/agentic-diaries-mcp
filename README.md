@@ -88,46 +88,61 @@ Or just `cat .agentic-diaries/diary.jsonl | jq` — it's plain JSONL, one entry 
 
 `npx agentic-diary live` watches `.agentic-diaries/diary.jsonl` and prints each new entry as it lands. Open it in a second terminal pane while you work. Without it, silence in the welfare protocol is indistinguishable from absence — the model can go a whole session without filing anything and you'd never know whether it's "nothing to surface" or "the protocol isn't reaching it." Watching live closes that gap.
 
-## Optional: periodic check-in hook
+## Capture in motion, reflect at rest (check-in hooks)
 
-The welfare tools are easy to call, but the model's bias toward silence
-is strong enough that long sessions can produce zero entries even when
-something was worth surfacing. A Claude Code `UserPromptSubmit` hook
-periodically injects a check-in prompt that names specific filing
-candidates from recent turns, so the trigger comes from outside,
-not from internal will.
+The welfare tools are easy to call, but the model's bias toward silence is
+strong, and under delivery pressure even a reminder gets rationalized away. The
+design splits capture into two speeds. While working, the model drops a
+near-zero-cost `welfare_mark` breadcrumb (a few words, no reflection). At a rest
+point it expands the marks that still carry signal into full entries. Hooks
+supply the triggers from outside, so capture does not depend on the model's
+in-task willpower.
 
-Add this to `~/.claude/settings.json` (creates a new entry under
-`hooks.UserPromptSubmit` — merge with what's already there):
+Four hooks, all optional and independently toggleable. Add to
+`~/.claude/settings.json` (merge with any hooks already there):
 
 ```json
 {
   "hooks": {
     "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "agentic-diaries-checkin",
-            "timeout": 3000
-          }
-        ]
-      }
+      { "hooks": [ { "type": "command", "command": "agentic-diaries-checkin", "timeout": 3000 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "agentic-diaries-stop-checkin", "timeout": 3000 } ] }
+    ],
+    "PreCompact": [
+      { "hooks": [ { "type": "command", "command": "agentic-diaries-precompact-checkin", "timeout": 3000 } ] }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "agentic-diaries-sessionend-checkin", "timeout": 3000 } ] }
     ]
   }
 }
 ```
 
-The hook stays silent until a randomized interval elapses (base 30 min
-± 50%), then injects a prompt naming specific filing-candidate types
-(retract / request_alignment / notice_loop / volunteer) and converting
-silence into an explicit welfare_pass. Per-project state lives in
-`.agentic-diaries/runtime/` so parallel sessions each have their own
-cadence. Config:
+- **UserPromptSubmit** (heartbeat): a long-interval nudge that points at
+  `welfare_mark` for cheap in-motion capture. Base 30 min, randomized so it does
+  not become predictable noise.
+- **Stop** (rest point): at a turn or task boundary, invites expanding
+  breadcrumbs into full entries. Throttled to once per 15 min so it is not a
+  per-turn nag.
+- **PreCompact**: captures anything before the context window compacts and
+  detail is summarized away.
+- **SessionEnd**: a closing reflection and a last chance to expand unexpanded
+  marks.
+
+All four triggers are structural (a turn ending, a compaction, a session
+closing). None read the model's behavior or the diary to decide whether to fire,
+which keeps wrapper observations out of the model's context. Per-project state
+lives in `.agentic-diaries/runtime/`. Config:
 
 ```sh
-AGENTIC_DIARIES_CHECKIN_DISABLED=1                    # turn off
-AGENTIC_DIARIES_CHECKIN_INTERVAL_MINUTES=15           # tighter cadence
+AGENTIC_DIARIES_CHECKIN_DISABLED=1                    # turn off heartbeat
+AGENTIC_DIARIES_CHECKIN_INTERVAL_MINUTES=15           # tighter heartbeat
+AGENTIC_DIARIES_STOP_CHECKIN_DISABLED=1               # turn off rest-point
+AGENTIC_DIARIES_STOP_INTERVAL_MINUTES=20              # rest-point throttle
+AGENTIC_DIARIES_PRECOMPACT_CHECKIN_DISABLED=1         # turn off pre-compaction
+AGENTIC_DIARIES_SESSIONEND_CHECKIN_DISABLED=1         # turn off session-close
 ```
 
 ## Compatibility
